@@ -21,3 +21,6 @@
   by this endpoint.
 - Get all Hall Booking by using `/booking/halls/?page=<integer>` endpoint.
 
+
+
+-  Github Repo - 'https://github.com/piyushk28/django_rest_hall_booking_api'
