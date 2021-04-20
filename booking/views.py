@@ -64,22 +64,18 @@ class AvailableHallView(generics.GenericAPIView, ListModelMixin, FilterQueryMixi
         end = self.get_end_datetime()
         capacity = self.get_capacity()
         query = Halls.get_availability_query(start, end)
-        return queryset.filter(capacity__gte=capacity, user_id=self.request.user).exclude(query)
+        return queryset.filter(capacity__gte=capacity).exclude(query)
 
     @swagger_auto_schema(manual_parameters=[start_param, end_param, capacity_param])
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
 
-class HallBookingListCreateView(generics.GenericAPIView,
-                                ListModelMixin,
-                                CreateModelMixin,
-                                FilterQueryMixin):
+class BookingListView(generics.GenericAPIView, ListModelMixin,
+                      FilterQueryMixin):
     serializer_class = HallBookingSerializer
     permission_classes = (IsAuthenticated,)
     queryset = HallBookings.objects.select_related('hall_id').all().order_by('-end')
-
-    lookup_field = 'hall_id'
 
     def filter_queryset(self, queryset):
         start = self.get_start_datetime(required=False)
@@ -91,6 +87,14 @@ class HallBookingListCreateView(generics.GenericAPIView,
             filter_query &= Q(end__date=end)
 
         return queryset.filter(filter_query)
+
+    @swagger_auto_schema(manual_parameters=[start_date_param, end_date_param])
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class HallBookingListCreateView(BookingListView, CreateModelMixin):
+    lookup_field = 'hall_id'
 
     def get_hall_object(self):
         return get_object_or_404(Halls, pk=self.kwargs[self.lookup_field])
@@ -120,7 +124,3 @@ class HallBookingListCreateView(generics.GenericAPIView,
     @swagger_auto_schema(request_body=HallBookingSerializer(), responses={201: HallBookingSerializer()})
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-
-    @swagger_auto_schema(manual_parameters=[start_date_param, end_date_param])
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)

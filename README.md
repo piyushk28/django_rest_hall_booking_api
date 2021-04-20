@@ -1,0 +1,23 @@
+## **Steps To Setup** **The Application**
+
+**API Schemas can be seen in Postman or Swagger.**
+
+- run `pip install -r requirements.txt`
+
+- update your database configuration in utils/constants.py.
+- run `python manage.py migrate`
+- run `python manage.py createsuperuser` to create a user.
+- run `python manage.py runserver` to runserver
+- open 'http://localhost:8000/swagger/' in Browser to Open Swagger.
+- You may import the collection into Postman by using 'http://localhost:8000/api.json/'.
+- First login with POST`/accounts/login/` endpoint and generate a JWT token.
+- Create Halls by using POST`/booking/halls/` endpoint.
+- Get All Halls List by using GET`/booking/halls/` endpoint.
+- Check all available Halls by using
+  GET`/booking/halls/available/?page=<integer>&start=<string>&end=<string>&capacity=<integer>` endpoint.
+- Book a hall by using POST `/booking/halls/:hall_id/booking/` endpoint, Here hall_id is the hall's primary key that you
+  want to book.
+- Get all bookings of an individual Hall `/booking/halls/:hall_id/booking/?page=<integer>&start=<string>&end=<string>`
+  by this endpoint.
+- Get all Hall Booking by using `/booking/halls/?page=<integer>` endpoint.
+
