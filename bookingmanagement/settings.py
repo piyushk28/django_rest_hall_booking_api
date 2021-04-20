@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'rest_framework',
+    'drf_yasg',
     'booking',
 
 ]
@@ -182,3 +184,8 @@ LOGGING = {
         },
     }
 }
+
+MEDIA_URL = '/media/'
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+MEDIA_ROOT = os.path.join(PROJECT_DIR, 'media-data')
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
