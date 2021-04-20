@@ -1,0 +1,14 @@
+*.pyc
+*.idea
+*.py[cod]
+*.log
+__pycache__/
+env/
+venv/
+log/
+*/.DS_Store
+.DS_Store
+.vscode/
+cron-logs/*
+.vscode/user/migrations
+/temp/
