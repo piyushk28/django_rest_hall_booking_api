@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -9,11 +10,16 @@ from rest_framework.response import Response
 
 from booking.models import Halls, HallBookings
 from booking.serializers import HallSerializer, HallBookingSerializer
+from utils.mixin_views import FilterQueryMixin
 
 start_param = openapi.Parameter('start', openapi.IN_QUERY, required=True, description="Start DateTime",
                                 type=openapi.TYPE_STRING)
 end_param = openapi.Parameter('end', openapi.IN_QUERY, required=True, description="End DateTime",
                               type=openapi.TYPE_STRING)
+start_date_param = openapi.Parameter('start', openapi.IN_QUERY, description="Start Date",
+                                     type=openapi.TYPE_STRING)
+end_date_param = openapi.Parameter('end', openapi.IN_QUERY, description="End Date",
+                                   type=openapi.TYPE_STRING)
 capacity_param = openapi.Parameter('capacity', openapi.IN_QUERY, required=True, description="Capacity",
                                    type=openapi.TYPE_INTEGER)
 
@@ -48,31 +54,10 @@ class HallRetrieveUpdateEditView(generics.GenericAPIView, RetrieveModelMixin, Up
         return self.destroy(request, *args, **kwargs)
 
 
-class AvailableHallView(generics.GenericAPIView, ListModelMixin):
+class AvailableHallView(generics.GenericAPIView, ListModelMixin, FilterQueryMixin):
     serializer_class = HallSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Halls.objects.prefetch_related('hall_bookings').all().order_by('-capacity')
-
-    def get_start_datetime(self, ):
-        params = self.request.query_params
-        start = params.get('start')
-        if not start:
-            raise ValueError("start query_param is required!!!")
-        return start
-
-    def get_end_datetime(self, ):
-        params = self.request.query_params
-        end = params.get('end')
-        if not end:
-            raise ValueError("end query_param is required!!!")
-        return end
-
-    def get_capacity(self, ):
-        params = self.request.query_params
-        capacity = params.get('capacity')
-        if not capacity:
-            raise ValueError("capacity query_param is required!!!")
-        return capacity
 
     def filter_queryset(self, queryset):
         start = self.get_start_datetime()
@@ -86,7 +71,10 @@ class AvailableHallView(generics.GenericAPIView, ListModelMixin):
         return self.list(request, *args, **kwargs)
 
 
-class HallBookingListCreateView(generics.GenericAPIView, ListModelMixin, CreateModelMixin):
+class HallBookingListCreateView(generics.GenericAPIView,
+                                ListModelMixin,
+                                CreateModelMixin,
+                                FilterQueryMixin):
     serializer_class = HallBookingSerializer
     permission_classes = (IsAuthenticated,)
     queryset = HallBookings.objects.select_related('hall_id').all().order_by('-end')
@@ -94,7 +82,15 @@ class HallBookingListCreateView(generics.GenericAPIView, ListModelMixin, CreateM
     lookup_field = 'hall_id'
 
     def filter_queryset(self, queryset):
-        return queryset.filter(user_id=self.request.user)
+        start = self.get_start_datetime(required=False)
+        end = self.get_end_datetime(required=False)
+        filter_query = Q(user_id=self.request.user)
+        if start:
+            filter_query &= Q(start__date=start)
+        if end:
+            filter_query &= Q(end__date=end)
+
+        return queryset.filter(filter_query)
 
     def get_hall_object(self):
         return get_object_or_404(Halls, pk=self.kwargs[self.lookup_field])
@@ -125,5 +121,6 @@ class HallBookingListCreateView(generics.GenericAPIView, ListModelMixin, CreateM
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+    @swagger_auto_schema(manual_parameters=[start_date_param, end_date_param])
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
