@@ -16,9 +16,9 @@ start_param = openapi.Parameter('start', openapi.IN_QUERY, required=True, descri
                                 type=openapi.TYPE_STRING)
 end_param = openapi.Parameter('end', openapi.IN_QUERY, required=True, description="End DateTime",
                               type=openapi.TYPE_STRING)
-start_date_param = openapi.Parameter('start', openapi.IN_QUERY, description="Start Date",
+start_date_param = openapi.Parameter('start', openapi.IN_QUERY, required=True, description="Start Date",
                                      type=openapi.TYPE_STRING)
-end_date_param = openapi.Parameter('end', openapi.IN_QUERY, description="End Date",
+end_date_param = openapi.Parameter('end', openapi.IN_QUERY, required=True, description="End Date",
                                    type=openapi.TYPE_STRING)
 capacity_param = openapi.Parameter('capacity', openapi.IN_QUERY, required=True, description="Capacity",
                                    type=openapi.TYPE_INTEGER)
@@ -78,13 +78,10 @@ class BookingListView(generics.GenericAPIView, ListModelMixin,
     queryset = HallBookings.objects.select_related('hall_id').all().order_by('-end')
 
     def filter_queryset(self, queryset):
-        start = self.get_start_datetime(required=False)
-        end = self.get_end_datetime(required=False)
-        filter_query = Q(user_id=self.request.user)
-        if start:
-            filter_query &= Q(start__date=start)
-        if end:
-            filter_query &= Q(end__date=end)
+        start = self.get_start_datetime()
+        end = self.get_end_datetime()
+        filter_query = Q(start__date__range=(start, end)) | Q(end__date__range=(start, end)) | Q(
+            Q(start__date__lte=start, end__date__gte=start) & Q(start__date__lte=end, end__date__gte=end))
 
         return queryset.filter(filter_query)
 

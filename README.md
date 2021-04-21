@@ -2,6 +2,9 @@
 
 **API Schemas can be seen in Postman or Swagger.**
 
+Note  -  Use DateTIme Strings for filtering even when you are filtering for Dates 
+as there could be a datetime issue is only Dates are Used while filtering. 
+A possible solution to fix this is to update the timezone in a middleware based on request user or some header.
 - run `pip install -r requirements.txt`
 
 - update your database configuration in utils/constants.py.
@@ -19,7 +22,7 @@
   want to book.
 - Get all bookings of an individual Hall `/booking/halls/:hall_id/booking/?page=<integer>&start=<string>&end=<string>`
   by this endpoint.
-- Get all Hall Booking by using `/booking/halls/?page=<integer>` endpoint.
+- Get all Halls Booking by using `/booking/halls/?page=<integer>` endpoint.
 
 
 
